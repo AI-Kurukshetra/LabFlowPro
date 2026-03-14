@@ -13,6 +13,7 @@ import type { ActionState } from "@/lib/actions/patients";
 export type { ActionState };
 import type { Patient, ResultStatus, Test } from "@/lib/types/database";
 import type { Permission } from "@/lib/rbac/permissions";
+import { saveResultsSchema, orderIdSchema } from "@/lib/validations/results";
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -31,20 +32,23 @@ export async function saveResults(
   const orderId = getString(formData, "order_id");
   const resultsJson = getString(formData, "results");
 
-  if (!orderId) {
-    return { status: "error", message: "Order ID is required." };
-  }
-
-  let results: { test_id: string; value: string; unit?: string }[];
+  let resultsRaw: unknown;
   try {
-    results = JSON.parse(resultsJson);
+    resultsRaw = JSON.parse(resultsJson);
   } catch {
     return { status: "error", message: "Invalid results data." };
   }
 
-  if (!Array.isArray(results) || results.length === 0) {
-    return { status: "error", message: "At least one result is required." };
+  const parsed = saveResultsSchema.safeParse({
+    order_id: orderId,
+    results: resultsRaw,
+  });
+
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
+
+  const { order_id, results } = parsed.data;
 
   const testIds = Array.from(new Set(results.map((result) => result.test_id)));
 
@@ -52,7 +56,7 @@ export async function saveResults(
     supabase
       .from("orders")
       .select("collection_date, created_at, patients(*)")
-      .eq("id", orderId)
+      .eq("id", order_id)
       .single(),
     supabase
       .from("tests")
@@ -80,7 +84,7 @@ export async function saveResults(
 
   const upsertRows = results.map((r) => ({
     organization_id: profile.organization_id,
-    order_id: orderId,
+    order_id,
     test_id: r.test_id,
     value: r.value,
     unit: r.unit ?? testsById.get(r.test_id)?.unit ?? null,
@@ -111,11 +115,15 @@ async function updateResultsStatus(
   const access = await checkActionPermission(supabase, permission);
   if ("error" in access) return access.error;
 
-  const orderId = getString(formData, "order_id");
+  const parsed = orderIdSchema.safeParse({
+    order_id: getString(formData, "order_id"),
+  });
 
-  if (!orderId) {
-    return { status: "error", message: "Order ID is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
+
+  const { order_id } = parsed.data;
 
   const updateData: Record<string, unknown> = {
     status: targetStatus,
@@ -125,7 +133,7 @@ async function updateResultsStatus(
   const { error } = await supabase
     .from("results")
     .update(updateData)
-    .eq("order_id", orderId);
+    .eq("order_id", order_id);
 
   if (error) {
     return { status: "error", message: error.message };
@@ -153,11 +161,15 @@ export async function approveResults(
   const access = await checkActionPermission(supabase, "results:approve");
   if ("error" in access) return access.error;
 
-  const orderId = getString(formData, "order_id");
+  const parsed = orderIdSchema.safeParse({
+    order_id: getString(formData, "order_id"),
+  });
 
-  if (!orderId) {
-    return { status: "error", message: "Order ID is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
+
+  const { order_id } = parsed.data;
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -168,7 +180,7 @@ export async function approveResults(
       reviewer_id: user!.id,
       approved_at: new Date().toISOString(),
     })
-    .eq("order_id", orderId);
+    .eq("order_id", order_id);
 
   if (error) {
     return { status: "error", message: error.message };

@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { checkActionPermission } from "@/lib/rbac/check-access";
 import type { PatientStatus } from "@/lib/types/database";
+import {
+  createPatientSchema,
+  updatePatientSchema,
+} from "@/lib/validations/patients";
 
 export type ActionState = {
   status: "idle" | "success" | "error";
@@ -23,10 +27,6 @@ function generatePatientRef(): string {
   return `PT-${now.slice(-3)}${rand.slice(0, 2)}`;
 }
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 export async function createPatient(
   _previousState: ActionState,
   formData: FormData,
@@ -37,25 +37,25 @@ export async function createPatient(
   if ("error" in access) return access.error;
   const { profile } = access;
 
-  const fullName = getString(formData, "full_name");
-  const dateOfBirth = getString(formData, "date_of_birth");
-  const gender = getString(formData, "gender");
-  const phone = getString(formData, "phone");
-  const email = getString(formData, "email");
+  const parsed = createPatientSchema.safeParse({
+    full_name: getString(formData, "full_name"),
+    date_of_birth: getString(formData, "date_of_birth") || undefined,
+    gender: getString(formData, "gender") || undefined,
+    phone: getString(formData, "phone") || undefined,
+    email: getString(formData, "email") || undefined,
+  });
 
-  if (!fullName) {
-    return { status: "error", message: "Full name is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (email && !isValidEmail(email)) {
-    return { status: "error", message: "Invalid email format." };
-  }
+  const { full_name, date_of_birth, gender, phone, email } = parsed.data;
 
   const { error } = await supabase.from("patients").insert({
     organization_id: profile.organization_id,
     patient_ref: generatePatientRef(),
-    full_name: fullName,
-    date_of_birth: dateOfBirth || null,
+    full_name,
+    date_of_birth: date_of_birth || null,
     gender: gender || null,
     phone: phone || null,
     email: email || null,
@@ -79,30 +79,26 @@ export async function updatePatient(
   const access = await checkActionPermission(supabase, "patients:update");
   if ("error" in access) return access.error;
 
-  const id = getString(formData, "id");
-  const fullName = getString(formData, "full_name");
-  const dateOfBirth = getString(formData, "date_of_birth");
-  const gender = getString(formData, "gender");
-  const phone = getString(formData, "phone");
-  const email = getString(formData, "email");
+  const parsed = updatePatientSchema.safeParse({
+    id: getString(formData, "id"),
+    full_name: getString(formData, "full_name"),
+    date_of_birth: getString(formData, "date_of_birth") || undefined,
+    gender: getString(formData, "gender") || undefined,
+    phone: getString(formData, "phone") || undefined,
+    email: getString(formData, "email") || undefined,
+  });
 
-  if (!id) {
-    return { status: "error", message: "Patient ID is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (!fullName) {
-    return { status: "error", message: "Full name is required." };
-  }
-
-  if (email && !isValidEmail(email)) {
-    return { status: "error", message: "Invalid email format." };
-  }
+  const { id, full_name, date_of_birth, gender, phone, email } = parsed.data;
 
   const { error } = await supabase
     .from("patients")
     .update({
-      full_name: fullName,
-      date_of_birth: dateOfBirth || null,
+      full_name,
+      date_of_birth: date_of_birth || null,
       gender: gender || null,
       phone: phone || null,
       email: email || null,

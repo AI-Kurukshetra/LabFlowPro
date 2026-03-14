@@ -6,10 +6,12 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { checkActionPermission } from "@/lib/rbac/check-access";
 import type { ActionState } from "@/lib/actions/patients";
 export type { ActionState };
-import type { ReportStatus, ReportFormat } from "@/lib/types/database";
-
-const VALID_STATUSES: ReportStatus[] = ["queued", "formatting", "release_ready", "released"];
-const VALID_FORMATS: ReportFormat[] = ["pdf", "pdf_csv", "pdf_json"];
+import type { ReportStatus } from "@/lib/types/database";
+import {
+  generateReportSchema,
+  updateReportStatusSchema,
+  reportIdSchema,
+} from "@/lib/validations/reports";
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -31,22 +33,22 @@ export async function generateReport(
   if ("error" in access) return access.error;
   const { profile } = access;
 
-  const orderId = getString(formData, "order_id");
-  const format = getString(formData, "format") as ReportFormat;
+  const parsed = generateReportSchema.safeParse({
+    order_id: getString(formData, "order_id"),
+    format: getString(formData, "format"),
+  });
 
-  if (!orderId) {
-    return { status: "error", message: "Order is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (!VALID_FORMATS.includes(format)) {
-    return { status: "error", message: "Invalid report format." };
-  }
+  const { order_id, format } = parsed.data;
 
   // Fetch the order to get the patient_id and verify it has approved/released results
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select("id, patient_id, status")
-    .eq("id", orderId)
+    .eq("id", order_id)
     .single();
 
   if (orderError || !order) {
@@ -57,7 +59,7 @@ export async function generateReport(
   const { data: results } = await supabase
     .from("results")
     .select("id, status")
-    .eq("order_id", orderId)
+    .eq("order_id", order_id)
     .in("status", ["approved", "released"]);
 
   if (!results || results.length === 0) {
@@ -70,7 +72,7 @@ export async function generateReport(
   const { error } = await supabase.from("reports").insert({
     organization_id: profile.organization_id,
     report_ref: generateReportRef(),
-    order_id: orderId,
+    order_id,
     patient_id: order.patient_id,
     format,
     version: 1,
@@ -101,16 +103,16 @@ export async function updateReportStatus(
   const access = await checkActionPermission(supabase, "reports:update_status");
   if ("error" in access) return access.error;
 
-  const id = getString(formData, "id");
-  const newStatus = getString(formData, "status") as ReportStatus;
+  const parsed = updateReportStatusSchema.safeParse({
+    id: getString(formData, "id"),
+    status: getString(formData, "status"),
+  });
 
-  if (!id) {
-    return { status: "error", message: "Report ID is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (!VALID_STATUSES.includes(newStatus)) {
-    return { status: "error", message: "Invalid status." };
-  }
+  const { id, status: newStatus } = parsed.data;
 
   const { data: report, error: fetchError } = await supabase
     .from("reports")
@@ -163,11 +165,15 @@ export async function releaseReport(
   const access = await checkActionPermission(supabase, "reports:release");
   if ("error" in access) return access.error;
 
-  const id = getString(formData, "id");
+  const parsed = reportIdSchema.safeParse({
+    id: getString(formData, "id"),
+  });
 
-  if (!id) {
-    return { status: "error", message: "Report ID is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
+
+  const { id } = parsed.data;
 
   const { data: report, error: fetchError } = await supabase
     .from("reports")

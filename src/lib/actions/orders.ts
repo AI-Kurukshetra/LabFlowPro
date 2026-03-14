@@ -6,10 +6,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { checkActionPermission } from "@/lib/rbac/check-access";
 import type { ActionState } from "@/lib/actions/patients";
 export type { ActionState };
-import type { OrderStatus, OrderPriority } from "@/lib/types/database";
+import type { OrderStatus } from "@/lib/types/database";
 import type { Permission } from "@/lib/rbac/permissions";
+import { createOrderSchema } from "@/lib/validations/orders";
 
-const VALID_PRIORITIES: OrderPriority[] = ["routine", "urgent", "stat"];
 const VALID_STATUSES: OrderStatus[] = ["draft", "collected", "in_process", "review", "released"];
 
 function getString(formData: FormData, key: string) {
@@ -32,24 +32,24 @@ export async function createOrder(
   if ("error" in access) return access.error;
   const { profile } = access;
 
-  const patientId = getString(formData, "patient_id");
-  const panelId = getString(formData, "panel_id");
-  const priority = getString(formData, "priority") as OrderPriority;
-  const notes = getString(formData, "notes");
+  const parsed = createOrderSchema.safeParse({
+    patient_id: getString(formData, "patient_id"),
+    panel_id: getString(formData, "panel_id") || undefined,
+    priority: getString(formData, "priority"),
+    notes: getString(formData, "notes") || undefined,
+  });
 
-  if (!patientId) {
-    return { status: "error", message: "Patient is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (!VALID_PRIORITIES.includes(priority)) {
-    return { status: "error", message: "Invalid priority." };
-  }
+  const { patient_id, panel_id, priority, notes } = parsed.data;
 
   const { error } = await supabase.from("orders").insert({
     organization_id: profile.organization_id,
     order_ref: generateOrderRef(),
-    patient_id: patientId,
-    panel_id: panelId || null,
+    patient_id,
+    panel_id: panel_id || null,
     priority,
     notes: notes || null,
     status: "draft",

@@ -23,9 +23,24 @@ LabFlow Pro solves that by putting the core lab workflow in one system:
 - intake staff, lab technicians, reviewers, and lab administrators
 - patients who want a simple portal to view results, reports, and AI-assisted explanations
 
-## Live App: Key User Flows
+## Live Demo
 
-This project is designed to be deployed on Vercel. In a live deployment, these are the core flows to demo:
+**Deployed at: [https://lab-flow-pro.vercel.app](https://lab-flow-pro.vercel.app)**
+
+LabFlow Pro is a fully responsive web application — works on desktop, tablet, and mobile. The live deployment on Vercel is connected to a Supabase backend with 1,800+ seeded records ready for demo.
+
+### Quick Access
+
+| Portal | URL | Login |
+|--------|-----|-------|
+| **Landing Page** | [lab-flow-pro.vercel.app](https://lab-flow-pro.vercel.app) | No login required |
+| **Staff Workspace** | [lab-flow-pro.vercel.app/login](https://lab-flow-pro.vercel.app/login) | See staff credentials below |
+| **Patient Portal** | [lab-flow-pro.vercel.app/login](https://lab-flow-pro.vercel.app/login) | See patient credentials below |
+| **Patient Signup** | [lab-flow-pro.vercel.app/patient-signup](https://lab-flow-pro.vercel.app/patient-signup) | Self-registration with email verification |
+
+## Key User Flows
+
+These are the core flows to explore in the live app:
 
 1. Staff sign in at `/login`
 2. Intake staff register patients at `/patients/new`
@@ -64,11 +79,13 @@ Useful seeded demo records:
 The seeded demo environment is centered on a single organization, `Metro Clinical Labs`, and includes:
 
 - 5 staff profiles across admin, intake, technician, and reviewer roles
-- 30 patients
-- 40 orders
-- 35 specimens
-- 12 reports
-- 26 clinical chemistry tests
+- 2 patient portal accounts (Emily Carter, James Wilson)
+- 130 patients (diverse US names, mixed demographics and statuses)
+- 300 orders across all workflow stages and priority levels
+- 249 specimens including rejected samples with realistic reasons
+- 1,200+ individual test results with ~200 abnormal values
+- 103 reports (mostly released, some in the generation pipeline)
+- 26 clinical chemistry tests with reference ranges
 - 6 panels: BMP, CMP, Electrolytes, Liver Function, Lipid Panel, and Renal Function
 
 The data is intentionally distributed across real workflow states so the app is demo-ready:
@@ -80,17 +97,39 @@ The data is intentionally distributed across real workflow states so the app is 
 
 ## Sample User Logins
 
-Verified demo login:
+### Staff Accounts
 
-- `mike.johnson@labflow.dev` — admin
+All staff accounts share the password: **`LabFlow@2026!`**
 
-Important note:
+| Email | Name | Role | What they can access |
+|-------|------|------|---------------------|
+| `mike.johnson@labflow.dev` | Mike Johnson | **Admin** | Full access — dashboard, analytics, all modules, user management, integrations |
+| `sarah.williams@labflow.dev` | Sarah Williams | **Intake** | Patient registration, order creation, specimen collection |
+| `brian.davis@labflow.dev` | Brian Davis | **Technician** | Specimen processing, result entry, draft/submit workflow |
+| `jessica.miller@labflow.dev` | Jessica Miller | **Reviewer** | Result approval/rejection, report generation and release |
+| `chris.anderson@labflow.dev` | Chris Anderson | **Technician** | Same as Brian — second technician for workload distribution |
 
-- Staff profiles for intake, technician, and reviewer roles are seeded in the demo data.
-- Passwords are managed in Supabase Auth and are intentionally not stored in this repository.
-- Patient users are created through the `/patient-signup` flow rather than being committed as source-controlled demo credentials.
+### Patient Accounts
 
-If you want fixed public demo credentials in this README, set or reset the demo account passwords in Supabase Auth first, then update this section.
+All patient accounts share the password: **`Patient@2026!`**
+
+| Email | Name | Patient Ref | Released Results | Released Reports | Best for demo |
+|-------|------|-------------|-----------------|-----------------|---------------|
+| `emily.carter@email.com` | Emily Carter | PT-10001 | CMP + BMP (multi-visit history) | Multiple reports | Multi-visit patient with full history |
+| `james.wilson@email.com` | James Wilson | PT-10002 | Lipid Panel (all 4 values abnormal) | 1 released report | Abnormal results + AI chatbot demo |
+
+### Demo Tips
+
+- **Admin demo**: Login as Mike Johnson → explore Dashboard, Analytics (KPIs, pipeline, staff activity), Admin (users, test catalog)
+- **Workflow demo**: Login as Sarah (intake) → create patient → create order → login as Brian (technician) → enter results → login as Jessica (reviewer) → approve → release report
+- **Patient demo**: Login as James Wilson → view abnormal lipid results → click "Ask AI" → watch the chatbot explain high cholesterol in plain language
+- **Role enforcement demo**: Login as Brian (technician) → notice no "Patients" or "Reports" in sidebar, no approve/release buttons on results
+
+Notes:
+
+- These are demo-only credentials for the seeded users in Supabase Auth.
+- New patients can self-register at `/patient-signup` with email verification.
+- Rotate or remove these credentials before using the project outside a demo environment.
 
 ## How Is It Different From Existing Alternatives?
 
@@ -180,11 +219,23 @@ NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx supabase/seed
 
 ## Deployment
 
-This app is intended to be deployed on Vercel with Supabase as the backend. Set the same environment variables in Vercel that you use locally, especially:
+**Production deployment: [https://lab-flow-pro.vercel.app](https://lab-flow-pro.vercel.app)**
 
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `OPENAI_API_KEY`
+This app is deployed on Vercel with Supabase as the backend. To deploy your own instance:
 
-For database administration and seeding, keep `DATABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` server-only.
+1. Push to GitHub
+2. Import in Vercel
+3. Add environment variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_APP_URL` | Yes | Your deployment URL (e.g., `https://lab-flow-pro.vercel.app`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase public/anon key |
+| `OPENAI_API_KEY` | Yes | For the AI patient chatbot |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only | For admin operations and seeding |
+| `DATABASE_URL` | Server only | For direct database access and migrations |
+
+4. Deploy — Vercel auto-builds and deploys on every push
+
+The app uses Next.js App Router with Server Components, optimized for Vercel's edge runtime. All pages are server-rendered on demand for real-time data.

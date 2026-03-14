@@ -4,6 +4,11 @@ import { redirect } from "next/navigation";
 
 import { getAppUrl, isSupabaseConfigured } from "@/lib/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  signInSchema,
+  signUpSchema,
+  patientSignUpSchema,
+} from "@/lib/validations/auth";
 
 export type AuthActionState = {
   status: "idle" | "error" | "success";
@@ -12,10 +17,6 @@ export type AuthActionState = {
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function isValidEmail(email: string) {
-  return /\S+@\S+\.\S+/.test(email);
 }
 
 function getSafeRedirectTarget(value: string) {
@@ -38,25 +39,18 @@ export async function signInAction(
     };
   }
 
-  const email = getString(formData, "email");
-  const password = getString(formData, "password");
-  const redirectTo = getSafeRedirectTarget(
-    getString(formData, "redirectTo") || "/dashboard"
-  );
+  const parsed = signInSchema.safeParse({
+    email: getString(formData, "email"),
+    password: getString(formData, "password"),
+    redirectTo: getString(formData, "redirectTo") || undefined,
+  });
 
-  if (!isValidEmail(email)) {
-    return {
-      status: "error",
-      message: "Enter a valid email address.",
-    };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (password.length < 8) {
-    return {
-      status: "error",
-      message: "Password must be at least 8 characters.",
-    };
-  }
+  const { email, password } = parsed.data;
+  const redirectTo = getSafeRedirectTarget(parsed.data.redirectTo || "/dashboard");
 
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -97,30 +91,17 @@ export async function signUpAction(
     };
   }
 
-  const email = getString(formData, "email");
-  const password = getString(formData, "password");
-  const confirmPassword = getString(formData, "confirmPassword");
+  const parsed = signUpSchema.safeParse({
+    email: getString(formData, "email"),
+    password: getString(formData, "password"),
+    confirmPassword: getString(formData, "confirmPassword"),
+  });
 
-  if (!isValidEmail(email)) {
-    return {
-      status: "error",
-      message: "Enter a valid email address.",
-    };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (password.length < 8) {
-    return {
-      status: "error",
-      message: "Password must be at least 8 characters.",
-    };
-  }
-
-  if (password !== confirmPassword) {
-    return {
-      status: "error",
-      message: "Passwords do not match.",
-    };
-  }
+  const { email, password } = parsed.data;
 
   const emailRedirectTo = getAppUrl() ? `${getAppUrl()}/login` : undefined;
   const supabase = await createServerSupabaseClient();
@@ -160,26 +141,18 @@ export async function patientSignUpAction(
     };
   }
 
-  const fullName = getString(formData, "fullName");
-  const email = getString(formData, "email");
-  const password = getString(formData, "password");
-  const confirmPassword = getString(formData, "confirmPassword");
+  const parsed = patientSignUpSchema.safeParse({
+    fullName: getString(formData, "fullName"),
+    email: getString(formData, "email"),
+    password: getString(formData, "password"),
+    confirmPassword: getString(formData, "confirmPassword"),
+  });
 
-  if (!fullName) {
-    return { status: "error", message: "Full name is required." };
+  if (!parsed.success) {
+    return { status: "error", message: parsed.error.issues[0].message };
   }
 
-  if (!isValidEmail(email)) {
-    return { status: "error", message: "Enter a valid email address." };
-  }
-
-  if (password.length < 8) {
-    return { status: "error", message: "Password must be at least 8 characters." };
-  }
-
-  if (password !== confirmPassword) {
-    return { status: "error", message: "Passwords do not match." };
-  }
+  const { fullName, email, password } = parsed.data;
 
   const emailRedirectTo = getAppUrl() ? `${getAppUrl()}/login` : undefined;
   const supabase = await createServerSupabaseClient();
