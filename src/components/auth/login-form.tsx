@@ -30,7 +30,7 @@ export function LoginForm({
   );
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} noValidate className="space-y-4">
       <input type="hidden" name="redirectTo" value={redirectTo} />
 
       <div className="space-y-2">
@@ -41,8 +41,7 @@ export function LoginForm({
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
-          required
-        />
+                  />
       </div>
 
       <div className="space-y-2">
@@ -53,8 +52,7 @@ export function LoginForm({
           type="password"
           autoComplete="current-password"
           placeholder="Enter your password"
-          required
-        />
+                  />
       </div>
 
       {state.message ? (

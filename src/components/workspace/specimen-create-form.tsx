@@ -57,7 +57,7 @@ export function SpecimenCreateForm({ orders }: SpecimenCreateFormProps) {
           </p>
         )}
 
-        <form action={formAction} className="space-y-5">
+        <form noValidate action={formAction} className="space-y-5">
           <input type="hidden" name="specimen_ref" value={generateSpecimenRef()} />
 
           <div className="space-y-2">
@@ -65,7 +65,7 @@ export function SpecimenCreateForm({ orders }: SpecimenCreateFormProps) {
             <select
               id={`${formId}-order`}
               name="order_id"
-              required
+             
               className={selectClassName}
             >
               <option value="">Select an order...</option>
@@ -82,7 +82,7 @@ export function SpecimenCreateForm({ orders }: SpecimenCreateFormProps) {
             <select
               id={`${formId}-type`}
               name="type"
-              required
+             
               className={selectClassName}
             >
               <option value="">Select type...</option>

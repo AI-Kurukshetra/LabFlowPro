@@ -26,7 +26,7 @@ export function SignupForm({ disabled = false }: SignupFormProps) {
   );
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} noValidate className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -35,8 +35,7 @@ export function SignupForm({ disabled = false }: SignupFormProps) {
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
-          required
-        />
+                  />
       </div>
 
       <div className="space-y-2">
@@ -47,8 +46,7 @@ export function SignupForm({ disabled = false }: SignupFormProps) {
           type="password"
           autoComplete="new-password"
           placeholder="Minimum 8 characters"
-          required
-        />
+                  />
       </div>
 
       <div className="space-y-2">
@@ -59,8 +57,7 @@ export function SignupForm({ disabled = false }: SignupFormProps) {
           type="password"
           autoComplete="new-password"
           placeholder="Repeat your password"
-          required
-        />
+                  />
       </div>
 
       {state.message ? (

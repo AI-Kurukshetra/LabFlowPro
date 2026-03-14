@@ -29,13 +29,13 @@ export function OrderCreateForm({ patients, panels }: OrderCreateFormProps) {
   }, [state.status, router]);
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form noValidate action={formAction} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="patient_id">Patient</Label>
         <select
           id="patient_id"
           name="patient_id"
-          required
+         
           className="h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <option value="">Select a patient</option>
@@ -68,7 +68,7 @@ export function OrderCreateForm({ patients, panels }: OrderCreateFormProps) {
         <select
           id="priority"
           name="priority"
-          required
+         
           defaultValue="routine"
           className="h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >

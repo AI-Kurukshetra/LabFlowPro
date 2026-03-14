@@ -51,13 +51,13 @@ export function ReportCreateForm({ orders }: ReportCreateFormProps) {
           </p>
         )}
 
-        <form action={formAction} className="space-y-5">
+        <form noValidate action={formAction} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor={`${formId}-order`}>Order</Label>
             <select
               id={`${formId}-order`}
               name="order_id"
-              required
+             
               className={selectClassName}
             >
               <option value="">Select an order...</option>
@@ -79,7 +79,7 @@ export function ReportCreateForm({ orders }: ReportCreateFormProps) {
             <select
               id={`${formId}-format`}
               name="format"
-              required
+             
               className={selectClassName}
             >
               <option value="">Select format...</option>

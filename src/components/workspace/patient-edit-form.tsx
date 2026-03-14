@@ -52,7 +52,7 @@ export function PatientEditForm({ patient }: PatientEditFormProps) {
           </p>
         )}
 
-        <form action={formAction} className="space-y-5">
+        <form noValidate action={formAction} className="space-y-5">
           <input type="hidden" name="id" value={patient.id} />
 
           <div className="space-y-2">
@@ -62,7 +62,7 @@ export function PatientEditForm({ patient }: PatientEditFormProps) {
               name="full_name"
               placeholder="e.g. Jane Smith"
               defaultValue={patient.full_name}
-              required
+             
             />
           </div>
 

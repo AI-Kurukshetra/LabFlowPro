@@ -41,14 +41,14 @@ export function PatientCreateForm() {
           </p>
         )}
 
-        <form action={formAction} className="space-y-5">
+        <form noValidate action={formAction} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor={`${formId}-full_name`}>Full Name *</Label>
             <Input
               id={`${formId}-full_name`}
               name="full_name"
               placeholder="e.g. Jane Smith"
-              required
+             
             />
           </div>
 
