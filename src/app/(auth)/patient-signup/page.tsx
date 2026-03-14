@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, FlaskConical } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { PatientSignupForm } from "@/components/auth/patient-signup-form";

@@ -228,8 +228,6 @@ async function seed() {
   // ---------------------------------------------------------------------------
   console.log("7/9  Specimens (35)...");
   const sid = (n: number) => uuid("e0000001", n);
-  const collectors = ["S. Williams", "B. Davis", "C. Anderson"];
-
   const specimens = [
     // Released order specimens (completed)
     { id: sid(1), specimen_ref: "SP-30001", order_id: oid(1), type: "serum", collector: "S. Williams", barcode: "LF30001A", collected_at: daysAgo(5), status: "completed" },

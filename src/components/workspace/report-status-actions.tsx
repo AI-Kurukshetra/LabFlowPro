@@ -30,6 +30,11 @@ export function ReportStatusActions({
   currentStatus,
   userRole,
 }: ReportStatusActionsProps) {
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+    updateReportStatus,
+    { status: "idle" },
+  );
+
   // Only show for admin and reviewer
   if (userRole && userRole !== "admin" && userRole !== "reviewer") {
     return (
@@ -38,10 +43,6 @@ export function ReportStatusActions({
       </p>
     );
   }
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updateReportStatus,
-    { status: "idle" },
-  );
 
   const transitions = TRANSITIONS[currentStatus] ?? [];
 

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ResultWithTestAndOrder, ResultStatus } from "@/lib/types/database";
+import type { ResultStatus } from "@/lib/types/database";
 
 type ResultFilters = {
   status?: string;

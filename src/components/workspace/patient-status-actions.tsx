@@ -28,6 +28,11 @@ export function PatientStatusActions({
   currentStatus,
   userRole,
 }: PatientStatusActionsProps) {
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+    updatePatientStatus,
+    { status: "idle" },
+  );
+
   // Only show for admin and intake
   if (userRole && userRole !== "admin" && userRole !== "intake") {
     return (
@@ -36,10 +41,6 @@ export function PatientStatusActions({
       </p>
     );
   }
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-    updatePatientStatus,
-    { status: "idle" },
-  );
 
   const transitions = TRANSITIONS[currentStatus] ?? [];
 

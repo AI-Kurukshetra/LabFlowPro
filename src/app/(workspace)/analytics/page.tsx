@@ -8,7 +8,6 @@ import {
   FileCheck2,
   FileOutput,
   FlaskConical,
-  Percent,
   Search,
   TestTube2,
   TrendingUp,

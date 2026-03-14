@@ -26,10 +26,6 @@ export function ResultsReviewActions({
   currentStatus,
   userRole,
 }: ResultsReviewActionsProps) {
-  // Only show review actions for reviewer and admin roles
-  if (userRole && userRole !== "reviewer" && userRole !== "admin") {
-    return null;
-  }
   const [returnComment, setReturnComment] = useState("");
   const [showReturnInput, setShowReturnInput] = useState(false);
 
@@ -45,6 +41,11 @@ export function ResultsReviewActions({
     releaseResults,
     initialState,
   );
+
+  // Only show review actions for reviewer and admin roles
+  if (userRole && userRole !== "reviewer" && userRole !== "admin") {
+    return null;
+  }
 
   // Only show review actions for specific statuses
   if (

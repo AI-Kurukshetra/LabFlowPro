@@ -176,21 +176,8 @@ function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-function randomInt(min: number, max: number): number {
-  return Math.floor(randomBetween(min, max + 1));
-}
-
 function round1(v: number): number {
   return Math.round(v * 10) / 10;
-}
-
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
 
 // Seeded random for deterministic patient names (but still looks random)

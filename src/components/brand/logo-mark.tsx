@@ -9,7 +9,6 @@ type LogoMarkProps = {
 };
 
 export function LogoMark({
-  compact = false,
   inverted = false,
   className,
 }: LogoMarkProps) {

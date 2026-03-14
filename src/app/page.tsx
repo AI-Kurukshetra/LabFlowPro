@@ -10,7 +10,6 @@ import {
   FlaskConical,
   Gauge,
   Heart,
-  MessageCircle,
   ShieldCheck,
   Sparkles,
   TestTube2,

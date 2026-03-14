@@ -13,6 +13,8 @@ import {
 export type AuthActionState = {
   status: "idle" | "error" | "success";
   message?: string;
+  fieldErrors?: Record<string, string>;
+  values?: Record<string, string>;
 };
 
 function getString(formData: FormData, key: string) {
@@ -46,7 +48,12 @@ export async function signInAction(
   });
 
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0].message };
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0]?.toString();
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { status: "error", fieldErrors, values: { email: getString(formData, "email") } };
   }
 
   const { email, password } = parsed.data;
@@ -62,6 +69,7 @@ export async function signInAction(
     return {
       status: "error",
       message: error.message,
+      values: { email },
     };
   }
 
@@ -97,8 +105,14 @@ export async function signUpAction(
     confirmPassword: getString(formData, "confirmPassword"),
   });
 
+  const rawValues = { email: getString(formData, "email") };
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0].message };
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0]?.toString();
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { status: "error", fieldErrors, values: rawValues };
   }
 
   const { email, password } = parsed.data;
@@ -112,10 +126,7 @@ export async function signUpAction(
   });
 
   if (error) {
-    return {
-      status: "error",
-      message: error.message,
-    };
+    return { status: "error", message: error.message, values: rawValues };
   }
 
   if (!data.session) {
@@ -148,8 +159,14 @@ export async function patientSignUpAction(
     confirmPassword: getString(formData, "confirmPassword"),
   });
 
+  const rawValues = { fullName: getString(formData, "fullName"), email: getString(formData, "email") };
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0].message };
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0]?.toString();
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { status: "error", fieldErrors, values: rawValues };
   }
 
   const { fullName, email, password } = parsed.data;
@@ -166,7 +183,7 @@ export async function patientSignUpAction(
   });
 
   if (error) {
-    return { status: "error", message: error.message };
+    return { status: "error", message: error.message, values: rawValues };
   }
 
   if (!data.session) {
